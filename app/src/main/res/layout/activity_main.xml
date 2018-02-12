@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="org.labs.musaka.miningslavestats.MainActivity"
+    android:background="#E95420"
+    android:gravity="center"
+    >
+
+
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+        <!--the centering (layout_gravity=center) makes it unreadable when the text is too long..-->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:background="#ce4718"
+            android:padding="5dp"
+            >
+            <TextView
+                android:id="@+id/tv_status_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Status: "
+                android:textSize="25sp"
+                />
+            <TextView
+                android:id="@+id/tv_status_data"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Live"
+                android:textSize="25sp"
+                />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:background="#ce4718"
+            android:padding="5dp"
+            >
+            <TextView
+                android:id="@+id/tv_hashrate_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Hashrate: "
+                android:textSize="25sp"
+                />
+            <TextView
+                android:id="@+id/tv_hashrate_speed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="69"
+                android:textSize="25sp"
+                />
+            <TextView
+                android:id="@+id/tv_hashrate_edinitsa"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=" Mh/s"
+                android:textSize="25sp"
+                />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:background="#ce4718"
+            android:padding="5dp"
+
+            >
+            <TextView
+                android:id="@+id/tv_balance_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Balance: "
+                android:textSize="25sp"
+                />
+            <TextView
+                android:id="@+id/tv_balance_data"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="0.034"
+                android:textSize="25sp"
+                />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+
+
+</LinearLayout>
