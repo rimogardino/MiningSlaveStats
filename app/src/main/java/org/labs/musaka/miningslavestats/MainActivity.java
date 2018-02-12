@@ -65,8 +65,19 @@ public class MainActivity extends AppCompatActivity {
 
 
     private class NanopoolAPI extends AsyncTask<URL ,Void ,String> {
+        private ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
 
 
+        @Override
+        protected void onPreExecute() {
+            progressDialog.setMessage("Downloading your data...");
+            progressDialog.show();
+            progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                public void onCancel(DialogInterface arg0) {
+                    NanopoolAPI.this.cancel(true);
+                }
+            });
+        }
 
         @Override
         protected String doInBackground(URL... urls) {
@@ -104,12 +115,12 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(String s) {
             JSONObject apiJSONobj = null;
             JSONObject JSONdata = null;
-            JSONArray JSONworkers = null;
+
 
             try {
                 apiJSONobj = new JSONObject(s);
                 JSONdata = apiJSONobj.getJSONObject("data");
-                JSONworkers = JSONdata.getJSONArray("workers");
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -128,11 +139,8 @@ public class MainActivity extends AppCompatActivity {
 
                 }
 
-                if (JSONworkers != null) {
-                    Object workersMaybe = JSONworkers.get(0);
+                this.progressDialog.dismiss();
 
-                    Log.d("tagchetoMI",workersMaybe.toString());
-                }
 
             } catch (JSONException e) {
                 e.printStackTrace();
