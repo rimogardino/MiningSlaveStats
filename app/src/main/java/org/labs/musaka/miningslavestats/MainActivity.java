@@ -3,8 +3,10 @@ package org.labs.musaka.miningslavestats;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,13 +32,21 @@ public class MainActivity extends AppCompatActivity {
     private TextView balance;
     private String results;
 
-    private String userAdress = "0xdd4417c91cb817fabead55aef7f43dec189c5f2c";
+    private String userAdress;
     private final String GENERAL_INFO_NANOPOOL_ADRESS = "https://api.nanopool.org/v1/eth/user/";
 
+
+    //find changes pls
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        PreferenceManager.setDefaultValues(this,R.xml.preferences,false);
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        userAdress = sharedPrefs.getString(getString(R.string.accountAddressKey),null);
+
+
         status = findViewById(R.id.tv_status_data);
         hashrate = findViewById(R.id.tv_hashrate_speed);
         balance = findViewById(R.id.tv_balance_data);
@@ -62,6 +72,11 @@ public class MainActivity extends AppCompatActivity {
         return mainURL;
     }
 
+    public void startSttings(View view) {
+        Intent intent = new Intent(this,SettingsActivity.class);
+        startActivity(intent);
+
+    }
 
 
     private class NanopoolAPI extends AsyncTask<URL ,Void ,String> {
