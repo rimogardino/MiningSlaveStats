@@ -1,5 +1,6 @@
 package org.labs.musaka.miningslavestats;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Spinner curenciesSpinner;
     private TimerTask timerTask;
     private Timer timer;
-    private NumberFormat formatterForETH = new DecimalFormat("#0.00000000");
+    private NumberFormat formatterForETH = new DecimalFormat("#0.0000000");
     private NumberFormat formatterForUSD = new DecimalFormat("#0.0000");
     private double ethValueInUSD;
     private double ethBalance;
@@ -74,10 +75,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         curenciesSpinner = findViewById(R.id.spinner_currency_select);
 
         // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.currencies, android.R.layout.simple_spinner_item);
+       ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.currencies, R.layout.my_spinner_layout);
         // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        adapter.setDropDownViewResource(R.layout.my_spinner_drowdown_item);
         // Apply the adapter to the spinner
         curenciesSpinner.setAdapter(adapter);
         curenciesSpinner.setOnItemSelectedListener(this);
@@ -106,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         };
 
         timer = new Timer();
-        timer.scheduleAtFixedRate(timerTask,10,30000); //todo maybe incorporate the period in a setting?
+        timer.scheduleAtFixedRate(timerTask,100,30000); //todo maybe incorporate the period in a setting?
     }
 
 
@@ -189,7 +190,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
         setBalance(i);
-        Toast.makeText(this,String.valueOf(i),Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -264,8 +264,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             try {
                 if (JSONdata != null) {
+
                     ethBalance = JSONdata.getDouble("balance");
-                    setBalance(curenciesSpinner.getSelectedItemPosition());
+                    Log.d("dataNanopool",String.valueOf(ethBalance));
+
                     //balance.setText(String.valueOf(formatter.format(ethBalance)));
                     double curenthashrate = JSONdata.getDouble("hashrate");
                     hashrate.setText(String.valueOf(curenthashrate));
@@ -277,7 +279,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     }
 
                 }
-
+                setBalance(curenciesSpinner.getSelectedItemPosition());
                 this.progressDialog.dismiss();
 
 
@@ -344,6 +346,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 if (JSONdata != null) {
                     try {
                         ethValueInUSD = JSONdata.getDouble("ethusd");
+                        //setBalance(curenciesSpinner.getSelectedItemPosition());
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -359,7 +362,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     protected void onPause() {
         timerTask.cancel();
-        progressMassageShown = false;
+        //progressMassageShown = false;
         super.onPause();
     }
 
