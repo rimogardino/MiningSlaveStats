@@ -6,31 +6,35 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TextView;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
     private TextView status;
     private TextView hashrate;
     private TextView balance;
-    private String results;
+    private TimerTask timerTask;
+    private Timer timer;
+    private boolean progressMassageShown = false;
 
     private String userAdress;
     private final String GENERAL_INFO_NANOPOOL_ADRESS = "https://api.nanopool.org/v1/eth/user/";
@@ -43,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         PreferenceManager.setDefaultValues(this,R.xml.preferences,false);
 
+        //Initialise the default preferences for when the user has not set any
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         userAdress = sharedPrefs.getString(getString(R.string.accountAddressKey),null);
 
@@ -51,9 +56,29 @@ public class MainActivity extends AppCompatActivity {
         hashrate = findViewById(R.id.tv_hashrate_speed);
         balance = findViewById(R.id.tv_balance_data);
 
-        new NanopoolAPI().execute(createUserSpecificURL(userAdress));
+
+        ScheduleAsyncTask();
     }
 
+
+    private void ScheduleAsyncTask() {
+        final Handler handler = new Handler(); //This is used to call the asyncTask from th main thread as Timer is running on it's own thread
+        timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d("syncing","Starting the AsyncTask");
+                        new NanopoolAPI().execute(createUserSpecificURL(userAdress));
+                    }
+                });
+            }
+        };
+
+        timer = new Timer();
+        timer.scheduleAtFixedRate(timerTask,10,30000); //todo maybe incorporate the period in a setting?
+    }
 
 
     private URL createUserSpecificURL(String accountAddress){
@@ -72,12 +97,39 @@ public class MainActivity extends AppCompatActivity {
         return mainURL;
     }
 
-    public void startSttings(View view) {
+
+    public void startSttings() {
         Intent intent = new Intent(this,SettingsActivity.class);
         startActivity(intent);
 
     }
 
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.main_menu,menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_settings:
+                startSttings();
+                break;
+            case  R.id.menuitem_refresh:
+                Log.d("refreshing","Starting the AsyncTask");
+                new NanopoolAPI().execute(createUserSpecificURL(userAdress));
+                break;
+            default:
+                break;
+
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 
     private class NanopoolAPI extends AsyncTask<URL ,Void ,String> {
         private ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
@@ -85,13 +137,17 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPreExecute() {
-            progressDialog.setMessage("Downloading your data...");
-            progressDialog.show();
-            progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                public void onCancel(DialogInterface arg0) {
-                    NanopoolAPI.this.cancel(true);
-                }
-            });
+            //todo change this to an animation for the balance
+            if (!progressMassageShown) {
+                progressMassageShown = true;
+                progressDialog.setMessage("Downloading your data...");
+                progressDialog.show();
+                progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    public void onCancel(DialogInterface arg0) {
+                        NanopoolAPI.this.cancel(true);
+                    }
+                });
+            }
         }
 
         @Override
@@ -165,4 +221,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onPause() {
+        timerTask.cancel();
+        progressMassageShown = false;
+        super.onPause();
+    }
+
+    @Override
+    protected void onRestart() {
+        ScheduleAsyncTask();
+        super.onRestart();
+    }
 }

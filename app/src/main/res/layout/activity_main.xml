@@ -9,12 +9,6 @@
     android:gravity="center"
     >
 
-    <Button
-        android:id="@+id/b_settings"
-        android:text="Settings"
-        android:onClick="startSttings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
 
 
     <HorizontalScrollView
