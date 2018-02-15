@@ -8,5 +8,19 @@
         android:title="Account address"
         android:defaultValue="0xdd4417c91cb817fabead55aef7f43dec189c5f2c"/>
 
+    <PreferenceScreen android:title="About" >
+        <Preference
+            android:title="Powered by Etherscan.io APIs"
+            >
+            <intent android:action="android.intent.action.VIEW"
+            android:data="https://etherscan.io/apis"/>
+        </Preference>
+        <Preference
+
+            android:title="Also powered by Nanopool.org APIs">
+            <intent android:action="android.intent.action.VIEW"
+                android:data="https://eth.nanopool.org/api"/>
+        </Preference>
+    </PreferenceScreen>
 
 </PreferenceScreen>

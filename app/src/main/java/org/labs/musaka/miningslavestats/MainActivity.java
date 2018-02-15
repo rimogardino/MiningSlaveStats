@@ -14,8 +14,15 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Adapter;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -24,16 +31,24 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
     private TextView status;
     private TextView hashrate;
     private TextView balance;
+    private Spinner curenciesSpinner;
     private TimerTask timerTask;
     private Timer timer;
+    private NumberFormat formatterForETH = new DecimalFormat("#0.00000000");
+    private NumberFormat formatterForUSD = new DecimalFormat("#0.0000");
+    private double ethValueInUSD;
+    private double ethBalance;
     private boolean progressMassageShown = false;
 
     private String userAdress;
@@ -56,6 +71,18 @@ public class MainActivity extends AppCompatActivity {
         hashrate = findViewById(R.id.tv_hashrate_speed);
         balance = findViewById(R.id.tv_balance_data);
 
+        curenciesSpinner = findViewById(R.id.spinner_currency_select);
+
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.currencies, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        curenciesSpinner.setAdapter(adapter);
+        curenciesSpinner.setOnItemSelectedListener(this);
+
+
 
         ScheduleAsyncTask();
     }
@@ -70,7 +97,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Log.d("syncing","Starting the AsyncTask");
-                        new NanopoolAPI().execute(createUserSpecificURL(userAdress));
+                        new etherscanAPI().execute(createUserSpecificEtherscanURL());
+                        new NanopoolAPI().execute(createUserSpecificNanopoolURL(userAdress));
+
                     }
                 });
             }
@@ -81,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private URL createUserSpecificURL(String accountAddress){
+    private URL createUserSpecificNanopoolURL(String accountAddress){
         Uri uriBuilder = Uri.parse(GENERAL_INFO_NANOPOOL_ADRESS).buildUpon()
                 .appendPath(accountAddress)
                 .build();
@@ -97,6 +126,20 @@ public class MainActivity extends AppCompatActivity {
         return mainURL;
     }
 
+    private URL createUserSpecificEtherscanURL(){
+        Uri uriBuilder = Uri.parse("https://api.etherscan.io/api?module=stats&action=ethprice&apikey=YourApiKeyToken").buildUpon()
+                .build();
+
+        URL mainURL = null;
+
+        try {
+            mainURL = new URL(uriBuilder.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        return mainURL;
+    }
 
     public void startSttings() {
         Intent intent = new Intent(this,SettingsActivity.class);
@@ -121,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case  R.id.menuitem_refresh:
                 Log.d("refreshing","Starting the AsyncTask");
-                new NanopoolAPI().execute(createUserSpecificURL(userAdress));
+                new NanopoolAPI().execute(createUserSpecificNanopoolURL(userAdress));
                 break;
             default:
                 break;
@@ -129,6 +172,29 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void setBalance(int i) {
+        String valueTodisplay;
+
+        if (i == 0) {
+            valueTodisplay = String.valueOf(formatterForETH.format(ethBalance));
+        } else {
+            valueTodisplay = String.valueOf(formatterForUSD.format(ethBalance * ethValueInUSD));
+        }
+
+        balance.setText(valueTodisplay);
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+        setBalance(i);
+        Toast.makeText(this,String.valueOf(i),Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
+
     }
 
     private class NanopoolAPI extends AsyncTask<URL ,Void ,String> {
@@ -198,7 +264,9 @@ public class MainActivity extends AppCompatActivity {
 
             try {
                 if (JSONdata != null) {
-                    balance.setText(String.valueOf(JSONdata.getDouble("balance")) + " ETH");
+                    ethBalance = JSONdata.getDouble("balance");
+                    setBalance(curenciesSpinner.getSelectedItemPosition());
+                    //balance.setText(String.valueOf(formatter.format(ethBalance)));
                     double curenthashrate = JSONdata.getDouble("hashrate");
                     hashrate.setText(String.valueOf(curenthashrate));
 
@@ -220,6 +288,73 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
+
+
+
+    private class etherscanAPI extends AsyncTask<URL ,Void ,String> {
+
+        @Override
+        protected String doInBackground(URL... urls) {
+            String jsonString = null;
+            HttpURLConnection urlConnection = null;
+            try {
+                urlConnection = (HttpURLConnection) urls[0].openConnection();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                InputStream in = urlConnection.getInputStream();
+
+                Scanner scanner = new Scanner(in);
+                scanner.useDelimiter("\\A");
+
+                boolean hasInput = scanner.hasNext();
+                if (hasInput) {
+                    jsonString = scanner.next();
+                } else {
+                    return "could't load JSON";
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                urlConnection.disconnect();
+            }
+
+            return jsonString;
+        }
+
+
+        @Override
+        protected void onPostExecute(String s) {
+            JSONObject apiJSONobj;
+            JSONObject JSONdata = null;
+
+
+            try {
+                apiJSONobj = new JSONObject(s);
+                JSONdata = apiJSONobj.getJSONObject("result");
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+
+                if (JSONdata != null) {
+                    try {
+                        ethValueInUSD = JSONdata.getDouble("ethusd");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+
+
+        }
+    }
+
 
     @Override
     protected void onPause() {
