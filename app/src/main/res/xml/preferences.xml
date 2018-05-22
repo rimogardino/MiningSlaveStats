@@ -6,7 +6,8 @@
     <EditTextPreference
         android:key="@string/accountAddressKey"
         android:title="Account address"
-        android:defaultValue="0xdd4417c91cb817fabead55aef7f43dec189c5f2c"/>
+
+        android:defaultValue="randomString"/>
 
     <PreferenceScreen android:title="About" >
         <Preference
